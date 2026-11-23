@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#d8321f">
+<meta name="description" content="Daily and weekly photo dares and family photowalk games. Shoot it, frame it, share it.">
+<title>Little Detours</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=Caveat:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a friend daring you to go out and shoot
+   IDEA: a contact sheet of assignments; each finished one becomes an instant print with the dare in grease pencil
+   PICTURE: the dare cards themselves (today + this week), then the print you make
+   COLOUR and TYPE: paper white, ink black, grease-pencil red; Archivo titles, Caveat dares, Inter UI
+   LAYOUT: one column on phones; dare cards in a row of three on wider screens */
+:root{color-scheme:light dark;--bg:light-dark(#efece6,#121212);--ink:light-dark(#141414,#f1eee8);--soft:light-dark(#5d5a55,#a9a49c);--paper:#fbfaf7;--red:#d8321f;--line:light-dark(#d6d1c8,#2e2e2e);--chip:light-dark(#fff,#1d1d1d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+main{max-width:980px;margin:0 auto;padding:20px 16px 56px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+h1{font:800 34px/1.05 Archivo,sans-serif;margin:0}
+h2{font:800 22px/1.1 Archivo,sans-serif;margin:0}
+.sub{color:var(--soft);font-size:14px}
+.sec{margin-top:26px}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{position:relative;text-align:left;background:var(--paper);color:#141414;border:0;border-radius:3px;padding:16px 16px 18px;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.05),0 12px 28px -16px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:4px;min-height:190px;font:inherit;transition:transform .25s}
+.card:nth-child(1){transform:rotate(-.7deg)}.card:nth-child(3){transform:rotate(.6deg)}
+.card:hover{transform:rotate(0) translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+.lvl{display:flex;align-items:center;gap:8px;font:600 13px Inter,sans-serif;color:var(--red)}
+.dots{display:inline-flex;gap:3px}.dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--red)}.dots i.f{background:var(--red)}
+.dare{font:600 30px/1.05 Caveat,cursive;margin:2px 0 2px;text-wrap:balance}
+.tw{list-style:none;padding:0;margin:0;font:600 21px/1.15 Caveat,cursive;color:#3b3935}
+.tw li::before{content:"+ ";color:var(--red)}
+.card .go{margin-top:auto;padding-top:10px;font:600 14px Inter,sans-serif;color:#5d5a55}
+.card.done .go{color:#1f7a3a}
+.card .thumb{position:absolute;right:12px;bottom:12px;width:56px;height:56px;object-fit:cover;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3);transform:rotate(4deg)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.gal button{padding:5px 5px 14px;background:var(--paper);border:0;border-radius:2px;box-shadow:0 4px 12px -6px rgba(0,0,0,.45);cursor:pointer}
+.gal img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.empty{color:var(--soft);font-size:15px;margin:0}
+/* shoot / print view */
+#view{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:5;display:none}
+#view.open{display:block}
+.vin{max-width:560px;margin:0 auto;padding:14px 16px 40px}
+.back{border:0;background:none;color:var(--ink);font:600 16px Inter,sans-serif;min-height:44px;padding:0;cursor:pointer}
+.print{background:var(--paper);color:#141414;padding:14px 14px 0;border-radius:3px;margin-top:6px;box-shadow:0 14px 34px -14px rgba(0,0,0,.5)}
+.shot{position:relative;aspect-ratio:3/2;background:#1b1b1b;display:grid;place-items:center;overflow:hidden}
+.shot.has{aspect-ratio:auto;background:none}
+.shot img{width:100%;display:block}
+.vf{position:absolute;inset:16% 22%;pointer-events:none}
+.vf i{position:absolute;width:24px;height:24px;border:2px solid rgba(255,255,255,.75)}
+.vf i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0}.vf i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0}
+.vf i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0}.vf i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0}
+.vf b{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border-radius:50%;border:2px solid var(--red)}
+.cap{padding:14px 4px 18px}
+.cap .dare{font-size:clamp(30px,8vw,38px)}
+.btns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:18px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:12px;font:600 16px Inter,sans-serif;cursor:pointer;border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:0 12px;text-align:center}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff}
+.btn.wide{grid-column:1/-1}
+.btn:focus-visible,label.btn:focus-within{outline:3px solid var(--red);outline-offset:2px}
+.btn svg{width:20px;height:20px;flex:none}
+input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+.note{font-size:14px;color:var(--soft);margin:12px 0 0;min-height:1.4em}
+[hidden]{display:none!important}
+/* tabs */
+.tabs{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:14px;width:100%;max-width:340px}
+.tabs button{border:0;background:none;color:var(--ink);font:600 15px Inter,sans-serif;min-height:42px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
+/* games */
+.panel{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:16px}
+.lab{font:600 14px Inter,sans-serif;color:var(--soft);margin:0 0 8px}
+.names{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.name{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:0 4px 0 14px;min-height:40px;font-weight:600}
+.name button{border:0;background:none;color:var(--soft);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px}
+.addrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.addrow input{font:16px Inter,sans-serif;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:0 12px}
+.addrow input:focus-visible{outline:3px solid var(--red);outline-offset:1px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.mode{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;min-height:64px}
+.mode b{display:block;font:600 15px Inter,sans-serif}.mode span{font-size:13px;color:var(--soft);line-height:1.3;display:block}
+.mode[aria-pressed=true]{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 14px Inter,sans-serif;cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;min-height:44px}
+.switch input{width:22px;height:22px;accent-color:var(--red)}
+.gstack{display:grid;gap:16px}
+.timer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--ink);color:var(--bg);border-radius:14px;padding:14px 16px}
+.timer strong{font:800 34px/1 Archivo,sans-serif;font-variant-numeric:tabular-nums}
+.timer.over{background:var(--red);color:#fff}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.pc{background:var(--paper);color:#141414;border-radius:3px;padding:14px 16px 16px;box-shadow:0 12px 26px -16px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px;position:relative}
+.pc .who{font:800 22px/1.1 Archivo,sans-serif}
+.pc .what{display:flex;align-items:center;gap:12px;min-height:64px}
+.pc .what .dare{font-size:30px;margin:0}
+.sw{width:52px;height:52px;border-radius:50%;flex:none;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.ico{width:52px;height:52px;flex:none;color:var(--red)}
+.pc .acts{display:flex;gap:8px;margin-top:4px}
+.pc .acts button{flex:1;min-height:44px;border-radius:10px;border:1px solid #d6d1c8;background:#fff;color:#141414;font:600 14px Inter,sans-serif;cursor:pointer}
+.pc .acts button.main{background:var(--red);border-color:var(--red);color:#fff}
+.cover{position:absolute;inset:0;border:0;border-radius:3px;background:#1b1b1b;color:#fbfaf7;font:600 16px Inter,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.cover b{font:800 24px Archivo,sans-serif}
+.pc .seen{font-size:13px;color:#5d5a55}
+.hint{font-size:14px;color:var(--soft);margin:8px 0 0}
+.hint:empty{display:none}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:4px}
+.slots.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.slot{position:relative;aspect-ratio:1;border:1.5px dashed #c9c3b8;background:#f1eee8;border-radius:4px;padding:0;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;font:600 22px Inter,sans-serif;color:#8a857c}
+.slot.full{border:0;background:#1b1b1b}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot span{position:absolute;left:0;right:0;bottom:0;padding:3px 4px;font:600 12px/1.2 Inter,sans-serif;color:#141414;background:rgba(251,250,247,.9);text-align:center}
+.slot.full span{background:rgba(20,20,20,.65);color:#fff}
+.slot:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.stamp{position:absolute;top:10px;right:12px;background:var(--red);color:#fff;font:800 14px Archivo,sans-serif;padding:4px 10px;border-radius:4px;transform:rotate(4deg)}
+.prog{font-size:13px;color:#5d5a55}
+.bigdare{background:var(--paper);color:#141414;border-radius:3px;padding:16px 18px;box-shadow:0 12px 26px -16px rgba(0,0,0,.5)}
+.bigdare .lvl{margin-bottom:2px}.bigdare .dare{font-size:clamp(30px,8vw,40px);margin:0}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:9;background:var(--red);color:#fff;font:700 17px Inter,sans-serif;padding:14px 20px;border-radius:14px;box-shadow:0 12px 30px -10px rgba(0,0,0,.5);max-width:calc(100vw - 32px);text-align:center}
+@media(max-width:760px){.cards{grid-template-columns:minmax(0,1fr)}.card{min-height:0}.card:nth-child(n){transform:none}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Little Detours</h1><span class="sub" id="today"></span></header>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-dares" aria-selected="true" aria-controls="tab-dares">Dares</button>
+    <button role="tab" id="t-games" aria-selected="false" aria-controls="tab-games">Games</button>
+  </div>
+
+  <div id="tab-games" role="tabpanel" hidden>
+    <div id="gsetup" class="gstack sec">
+      <div class="panel">
+        <p class="lab">Who’s on the walk?</p>
+        <div class="names" id="names"></div>
+        <form class="addrow" id="addform"><input id="newname" placeholder="Add a name" autocomplete="off" enterkeyhint="done" aria-label="Name"><button class="btn main" type="submit">Add</button></form>
+      </div>
+      <div class="panel">
+        <p class="lab">Game</p>
+        <div class="modes" id="modes"></div>
+      </div>
+      <div class="panel gstack">
+        <div id="countrow"><p class="lab">Photos each</p><div class="chips" id="counts"></div><p class="hint" id="counthint"></p></div>
+        <div id="everyrow"><p class="lab">New surprise every</p><div class="chips" id="everys"></div></div>
+        <div><p class="lab">Time limit</p><div class="chips" id="times"></div></div>
+        <label class="switch" id="secretrow"><input type="checkbox" id="secret"> Secret mode: pass the phone, each person reveals their own</label>
+        <p class="hint" id="modehint"></p>
+      </div>
+      <button class="btn main" id="deal">Hand out assignments</button>
+      <p class="note" id="gnote"></p>
+    </div>
+
+    <div id="gplay" class="gstack sec" hidden>
+      <div class="sechead"><h2 id="gtitle"></h2><span class="sub" id="gsub"></span></div>
+      <div class="timer" id="timer" hidden><span id="tlabel">Time left</span><strong id="tleft"></strong></div>
+      <div class="bigdare" id="bigdare" hidden></div>
+      <div class="players" id="players"></div>
+      <input type="file" id="slotin" accept="image/*" hidden>
+      <div class="btns">
+        <button class="btn" id="gsend">Send to family</button>
+        <button class="btn" id="redeal">Deal again</button>
+        <button class="btn wide" id="gend">New game</button>
+      </div>
+      <p class="note" id="pnote"></p>
+    </div>
+  </div>
+
+  <div id="tab-dares" role="tabpanel">
+  <section class="sec">
+    <div class="sechead"><h2>Today’s dares</h2><span class="sub" id="dayleft"></span></div>
+    <div class="cards" id="daily"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sechead"><h2>This week’s dares</h2><span class="sub" id="weekleft"></span></div>
+    <div class="cards" id="weekly"></div>
+  </section>
+
+  <section class="sec">
+    <div class="sechead"><h2>Your prints</h2><span class="sub" id="count"></span></div>
+    <div class="gal" id="gal"></div>
+    <p class="empty" id="empty">Finish a dare and its print lands here.</p>
+  </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div id="view" role="dialog" aria-modal="true" aria-label="Dare">
+  <div class="vin">
+    <button class="back" id="back">← Back</button>
+    <div class="print">
+      <div class="shot" id="shot"><div class="vf" id="vf"><i></i><i></i><i></i><i></i><b></b></div></div>
+      <div class="cap">
+        <div class="lvl" id="vlvl"></div>
+        <p class="dare" id="vdare"></p>
+        <ul class="tw" id="vtw"></ul>
+      </div>
+    </div>
+    <div class="btns" id="pick">
+      <label class="btn main" for="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo<input id="cam" type="file" accept="image/*" capture="environment"></label>
+      <label class="btn" for="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16"/></svg>Upload photo<input id="up" type="file" accept="image/*"></label>
+    </div>
+    <div class="btns" id="out" hidden>
+      <button class="btn main" id="share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></svg>Share</button>
+      <button class="btn" id="save">Save</button>
+      <button class="btn wide" id="change">Use a different photo</button>
+    </div>
+    <p class="note" id="note"></p>
+  </div>
+</div>
+
+<script>
+{
+// ---------- dare pools ----------
+// Each dare can carry tags ("text|tag tag"). Rules list the tags they can't go with (no) and a group (g):
+// two rules from the same group never land on the same dare.
+const cat=(c,base,items)=>items.map(s=>{const [t,x]=s.split("|");return {cat:c,text:t,tags:(base+" "+(x||"")).trim().split(/\s+/).filter(Boolean)}});
+const DAILY=[
+ ...cat("Colour","colour",["Something blue","Something red that isn't a sign","Three things the same colour","A colour that clashes","Only black and white things","Something yellow in shadow","The greenest thing nearby","Two colours that belong together","Something orange","Pastel colours","One bright spot in a dull scene","Rust","Warm and cool colours side by side","Colour reflected onto another surface","White on white","Many colours in one small thing|macro"]),
+ ...cat("Light","",["A long shadow|sun","Light coming through something","A reflection that tells a story","Something glowing","A silhouette","Light falling on a wall","Something lit from behind","The darkest corner you can find|lowkey","Light through leaves","Glowing edges","A lamp switched on|lamp","Dappled light|sun","Window light on an object|indoor","Your shadow doing something|sun","A sunburst|sun up","Light dancing on water"]),
+ ...cat("Place","",["A landscape|far","The view you never look at","A doorway","Somewhere people wait","The sky, with one thing in it|far up","A window, from inside|indoor","Where two surfaces meet","A path going somewhere","A staircase","A bench","A bridge|go","A view framed by trees|far go","A gate or fence","A tunnel or underpass|go","A crossing","A rooftop|far up"]),
+ ...cat("Shape","",["Something round","A perfect line","A repeating pattern","Something broken","A spiral","Hidden triangles","Symmetry|centre","Something tiny made huge|macro","Curves","Circles inside circles","Diagonal lines","A grid","A stack or pile","Something perfectly centred|centre","A pattern with one thing breaking it","Shapes made by gaps"]),
+ ...cat("Story","",["Something old","Evidence someone was just here","A pair|two","Something waiting","A small rebellion","Comfort","Something out of place","Hands doing something|people","Something forgotten","Two things that don't belong together|two","Something made by hand","Something that's been repaired","A collection of something","An empty chair","Something halfway done","A sign with an odd message"]),
+ ...cat("Texture","",["Peeling paint","Wood grain","Something wet","Something fluffy","Cracks","Brick or stone up close|macro","Folds in fabric","Rough next to smooth"]),
+ ...cat("Nature","",["A single leaf","A flower up close|macro","A tree from underneath|up","Clouds|far up","Weeds in the city","A bird or insect","Water drops|macro","A sign of the season"]),
+ ...cat("Street","",["Street art","A shop-window reflection","Bicycles","Someone's shoes|people","Numbers on a building","A letterbox","A shop display","Traffic signs"]),
+ ...cat("Home","indoor",["Your breakfast","Kitchen tools","Something on your desk","Steam","Keys","Your favourite mug","Something you use every day","Fruit"]),
+ ...cat("Mood","",["Calm","Chaos","Lonely","Joy","Mystery","Nostalgia","Tension","Something that looks like something else"])
+];
+const rule=(text,no="",g="")=>({text,no:no.split(/\s+/).filter(Boolean),g});
+const DAILY_TW=[
+ rule("Shoot from below","","angle"),rule("Shoot from directly above","far up","angle"),rule("From a child's eye level","","angle"),rule("Camera above your head","macro","angle"),
+ rule("Fill the whole frame","","space"),rule("Leave half the frame empty","macro","space"),rule("Put the subject in a corner","centre","space"),rule("Use the rule of thirds","centre","space"),rule("Make it symmetrical","","space"),
+ rule("Within 20 steps of where you are","far go"),rule("Get closer than feels normal","far up"),rule("No people allowed","people"),rule("Include a straight line"),rule("Tilt the camera on purpose","centre"),
+ rule("Something must be blurry","","blur"),rule("Something blurry in front","","blur"),rule("Only one shot"),rule("Through glass or a gap"),rule("Include your shadow or reflection"),rule("In the next 30 minutes","go"),
+ rule("Shoot it vertical","","orient"),rule("Shoot it horizontal","","orient"),rule("Without looking at the screen"),rule("Show only part of it"),rule("An odd number of things","two"),
+ rule("Add a pop of red","colour"),rule("Include a texture"),rule("Light behind the subject"),rule("Photograph the shadow, not the thing","indoor macro"),rule("Include the sky","indoor macro up")
+];
+const WEEKLY=[
+ ...cat("Light","",["A landscape at golden hour|far golden","Weather you'd usually stay in for|weather","A reflection in a puddle or window","City lights at night|night","Fog or mist|weather","Blue hour|evening","Silhouettes at sunset|evening golden","Light trails|night blur","Rain|weather","Mostly white (high key)|highkey","Mostly dark (low key)|lowkey","Reflections in still water","Shadows and lines","Sunrise|morning far","The moon|night far up"]),
+ ...cat("Place","",["Your neighbourhood after dark|night","Make a familiar place look foreign","A place at its emptiest","The edge of town|far go","A market|people go","Your town's best viewpoint|far go","Your daily journey","A forgotten place|go","Public transport|people","Through a window, from outside","A local celebration|people go","Rooftops|far up","The doors of your town"]),
+ ...cat("Story","",["A portrait without a face|people portrait","Something that will be gone tomorrow","Old and new in one picture","Someone at work|people","A still life with three objects|indoor","Food as art|indoor","A portrait of a pet|portrait","Ask someone for their portrait|people portrait","A candid street moment|people","A window-light portrait|people portrait indoor","Tools of a trade","Tell a story in one frame","Black and white street|bw people","Something handmade and its maker|people","A tree, in its season"]),
+ ...cat("Motion","",["Water in motion|blur","Something moving, frozen sharp|freeze","Something moving, blurred on purpose|blur","Long exposure of water|blur","A panning shot|blur","Animals in motion|freeze"]),
+ ...cat("Shape","",["One subject, a lot of empty space","Texture so close you can feel it|macro","Leading lines to a subject","A frame within a frame","Lines and curves in architecture","Minimalism","Abstract architecture","A tiny world (macro)|macro","Big and small together"]),
+ ...cat("Colour","colour",["One colour, everywhere in the frame","The colour of the season"])
+];
+const WEEKLY_TW=[
+ rule("Don't zoom: one focal length","","lens"),rule("Your widest lens","macro","lens"),rule("Your longest zoom","indoor","lens"),
+ rule("Shoot at sunrise or sunset","night evening morning golden indoor","time"),rule("Only before 9am","night evening golden","time"),
+ rule("Compose for black and white","colour bw"),rule("Underexpose a stop (moody)","highkey","expo"),rule("Overexpose a stop (bright and airy)","lowkey night","expo"),
+ rule("Focus manually"),rule("Shoot into the sun","night indoor"),rule("From ground level","up"),rule("Ten shots maximum, then pick one"),
+ rule("Somewhere you've never photographed","indoor"),rule("Shutter speed 1/15 or slower","freeze","shutter"),rule("Shoot wide open"),rule("A person, small in the frame","portrait macro indoor"),
+ rule("Use only natural light","night","light"),rule("Use flash","far up","light"),rule("Use a tripod or a wall"),rule("Lock your settings once, no changes all week"),
+ rule("Compose for a square crop"),rule("Focus on the background","macro"),rule("Walk at least 1 km before the first shot","indoor"),rule("A reflection must be in it")
+];
+const LV=["Easy","Medium","Hard"];
+
+// ---------- seeded picks (everyone gets the same dares on the same day) ----------
+function rngFrom(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+ let a=(()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return (h^=h>>>16)>>>0})();
+ return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffled(arr,r){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+// Walk the list in a shuffled order, three slots per day/week, so nothing repeats until the whole list is used.
+// Each cycle reshuffles the two halves separately, so a dare is never back within half a cycle.
+const cycCache={};
+function cyclePick(pool,name,slot){
+ const N=pool.length,c=Math.floor(slot/N),key=name+":"+c;
+ if(!cycCache[key]){const base=shuffled(pool,rngFrom(name+":base")),h=Math.floor(N/2);
+  cycCache[key]=[...shuffled(base.slice(0,h),rngFrom(key+":a")),...shuffled(base.slice(h),rngFrom(key+":b"))]}
+ return cycCache[key][slot%N];
+}
+function pickRules(d,rules,n,r){
+ const tags=new Set(d.tags),out=[];
+ for(const x of shuffled(rules,r)){if(out.length>=n)break;if(x.no.some(t=>tags.has(t)))continue;if(x.g&&out.some(o=>o.g===x.g))continue;out.push(x)}
+ return out.map(x=>x.text);
+}
+function makeSet(name,index,pool,rules,kind,label){
+ const picks=[];
+ for(let l=0;l<3;l++){let s=index*3+l,d=cyclePick(pool,name,s),k=1;while(picks.includes(d)){d=cyclePick(pool,name,s+pool.length*k+k);k++}picks.push(d)}
+ return picks.map((d,l)=>({key:kind+":"+label+":"+l,kind,label,level:l,cat:d.cat,text:d.text,tag:kind+" · "+LV[l]+" · "+d.cat,tw:pickRules(d,rules,l,rngFrom(kind+":"+label+":"+l))}));
+}
+const pad2=n=>String(n).padStart(2,"0");
+function ymd(d){return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();const w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);return{y,w}}
+
+// ---------- storage: localStorage for small things, IndexedDB for prints ----------
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let dbp=null;
+function db(){if(dbp)return dbp;dbp=new Promise((res,rej)=>{try{const q=indexedDB.open("photo-dare",2);q.onupgradeneeded=()=>{const d=q.result;if(!d.objectStoreNames.contains("prints"))d.createObjectStore("prints",{keyPath:"key"});if(!d.objectStoreNames.contains("slots"))d.createObjectStore("slots",{keyPath:"key"})};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}});return dbp}
+async function tx(mode,fn,store="prints"){const d=await db();return new Promise((res,rej)=>{const t=d.transaction(store,mode),s=t.objectStore(store);const out=fn(s);t.oncomplete=()=>res(out&&out.result);t.onerror=()=>rej(t.error)})}
+// photos taken for a game's collage, before they become a print
+const memSlots=new Map();
+async function putSlot(p){memSlots.set(p.key,p);try{await tx("readwrite",s=>s.put(p),"slots")}catch(e){}}
+async function loadSlots(){try{const r=await tx("readonly",s=>s.getAll(),"slots");r.forEach(p=>memSlots.set(p.key,p))}catch(e){}}
+async function dropSlots(prefix){const ks=[...memSlots.keys()].filter(k=>k.startsWith(prefix));ks.forEach(k=>memSlots.delete(k));try{await tx("readwrite",s=>{ks.forEach(k=>s.delete(k))},"slots")}catch(e){}}
+const memPrints=new Map();
+async function putPrint(p){memPrints.set(p.key,p);try{await tx("readwrite",s=>s.put(p))}catch(e){}}
+async function allPrints(){try{const r=await tx("readonly",s=>s.getAll());r.forEach(p=>memPrints.set(p.key,p))}catch(e){}return [...memPrints.values()].sort((a,b)=>b.date-a.date)}
+
+// ---------- state ----------
+const $=id=>document.getElementById(id);
+let now=new Date(),daily=[],weekly=[],cur=null,curBlob=null,downloads=null,done=ls.get("pd-done",{});
+
+function buildSets(){
+ now=new Date();const day=ymd(now),wk=isoWeek(now),wl=wk.y+"-W"+pad2(wk.w);
+ const dayIdx=Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/864e5);
+ daily=makeSet("daily",dayIdx,DAILY,DAILY_TW,"Daily",day);
+ weekly=makeSet("weekly",Math.floor((dayIdx+3)/7),WEEKLY,WEEKLY_TW,"Weekly",wl);
+ $("today").textContent=now.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+ const mid=new Date(now);mid.setHours(24,0,0,0);const h=Math.ceil((mid-now)/36e5);
+ $("dayleft").textContent=h<=1?"New dares within the hour":`New dares in ${h} h`;
+ const dl=7-((now.getDay()+6)%7)-1;$("weekleft").textContent=dl===0?"Last day of the week":`Week ${wk.w} · ${dl+1} days left`;
+}
+const dots=l=>`<span class="dots">${[0,1,2].map(i=>`<i class="${i<=l?"f":""}"></i>`).join("")}</span>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function cardHTML(d){
+ const p=memPrints.get(d.key);
+ return `<button class="card${p?" done":""}" data-k="${d.key}"><span class="lvl">${dots(d.level)}${LV[d.level]} · ${esc(d.cat)}</span>
+ <span class="dare">${esc(d.text)}</span><ul class="tw">${d.tw.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+ <span class="go">${p?"✓ Done, tap to view":"Tap to shoot"}</span>${p?`<img class="thumb" src="${p.thumb}" alt="">`:""}</button>`;
+}
+async function renderHome(){
+ buildSets();
+ const ps=await allPrints();
+ $("daily").innerHTML=daily.map(cardHTML).join("");
+ $("weekly").innerHTML=weekly.map(cardHTML).join("");
+ $("gal").innerHTML=ps.map(p=>`<button data-k="${p.key}" aria-label="${esc(p.text)}"><img src="${p.thumb}" alt=""></button>`).join("");
+ $("empty").hidden=ps.length>0;
+ $("count").textContent=ps.length?`${ps.length} print${ps.length>1?"s":""}`:"";
+}
+function find(k){return daily.find(d=>d.key===k)||weekly.find(d=>d.key===k)||(memPrints.get(k)&&memPrints.get(k).dare)}
+
+// ---------- view ----------
+function openView(d){
+ cur=d;curBlob=null;
+ const lbl=d.tag||((d.kind==="Weekly"?"Weekly":"Daily")+" · "+LV[d.level]+" · "+d.cat);
+ $("vlvl").innerHTML=(d.level!=null?dots(d.level):"")+esc(lbl);$("vdare").textContent=d.text;
+ $("vtw").innerHTML=d.tw.map(t=>`<li>${esc(t)}</li>`).join("");
+ const p=memPrints.get(d.key);
+ if(p){showPhoto(URL.createObjectURL(p.photo||p.blob));curBlob=p.blob;setMode(true)}else{clearPhoto();setMode(false)}
+ $("change").hidden=!!d.collage;
+ $("note").textContent="";$("view").classList.add("open");document.body.style.overflow="hidden";
+ if(location.hash!=="#dare")location.hash="dare";
+ $("back").focus();
+}
+function closeView(){$("view").classList.remove("open");document.body.style.overflow="";cur=null;renderHome();if(game)renderGame()}
+function setMode(has){$("pick").hidden=has;$("out").hidden=!has}
+function clearPhoto(){const s=$("shot");s.classList.remove("has");s.querySelector("img")?.remove();$("vf").hidden=false;$("cam").value="";$("up").value=""}
+function showPhoto(src){const s=$("shot");s.querySelector("img")?.remove();const i=new Image();i.src=src;i.alt="Your photo";s.prepend(i);s.classList.add("has");$("vf").hidden=true}
+
+function loadImg(blob){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(blob)})}
+function wrap(x,text,max){const w=text.split(" "),L=[];let l="";for(const s of w){const t=l?l+" "+s:s;if(x.measureText(t).width>max&&l){L.push(l);l=s}else l=t}if(l)L.push(l);return L}
+async function compose(img,d,maxAspect=1.5){
+ try{await Promise.all([document.fonts.load("600 40px Caveat"),document.fonts.load("600 20px Inter")])}catch(e){}
+ const W=1600,pad=64,iw=img.naturalWidth,ih=img.naturalHeight,H=Math.round(W*Math.min(ih/iw,maxAspect));
+ const c=document.createElement("canvas"),x=c.getContext("2d");
+ x.font="600 100px Caveat";const main=wrap(x,d.text,W);x.font="600 66px Caveat";const tl=d.tw.flatMap(t=>wrap(x,"+ "+t,W));
+ const capH=84+main.length*96+tl.length*70+96;
+ c.width=W+pad*2;c.height=pad+H+capH;
+ x.fillStyle="#fbfaf7";x.fillRect(0,0,c.width,c.height);
+ const r=Math.max(W/iw,H/ih),w=iw*r,h=ih*r;
+ x.save();x.beginPath();x.rect(pad,pad,W,H);x.clip();x.drawImage(img,pad+(W-w)/2,pad+(H-h)/2,w,h);x.restore();
+ let y=pad+H+76;x.fillStyle="#d8321f";x.font="600 34px Inter, sans-serif";
+ x.fillText((d.tag||((d.kind==="Weekly"?"Weekly":"Daily")+" · "+LV[d.level]+" · "+d.cat)).toUpperCase(),pad+4,y);
+ y+=96;x.fillStyle="#141414";x.font="600 100px Caveat, cursive";for(const l of main){x.fillText(l,pad,y);y+=96}
+ x.fillStyle="#3b3935";x.font="600 66px Caveat, cursive";for(const l of tl){x.fillText(l,pad,y);y+=70}
+ x.fillStyle="#9a958c";x.font="400 28px Inter, sans-serif";x.textAlign="right";
+ x.fillText("Little Detours · "+new Date().toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}),c.width-pad,c.height-40);
+ return c;
+}
+async function onFile(e){
+ const f=e.target.files[0];if(!f||!cur)return;
+ $("note").textContent="Developing…";
+ try{
+  const img=await loadImg(f);showPhoto(img.src);setMode(true);
+  const c=await compose(img,cur);
+  curBlob=await new Promise(r=>c.toBlob(r,"image/jpeg",.9));
+  const t=document.createElement("canvas"),s=Math.min(img.naturalWidth,img.naturalHeight);t.width=t.height=240;
+  t.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,240,240);
+  // the print keeps the original photo too, so reopening shows it uncropped
+  const photo=await new Promise(r=>{const pc=document.createElement("canvas"),k=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));pc.width=img.naturalWidth*k;pc.height=img.naturalHeight*k;pc.getContext("2d").drawImage(img,0,0,pc.width,pc.height);pc.toBlob(r,"image/jpeg",.88)});
+  await putPrint({key:cur.key,date:Date.now(),text:cur.text,dare:cur,blob:curBlob,photo,thumb:t.toDataURL("image/jpeg",.75)});
+  $("note").textContent="Your print is ready. Share it or save it to your phone.";
+ }catch(err){$("note").textContent="Couldn't read that image. Try another one.";clearPhoto();setMode(false)}
+}
+function fileName(){return "little-detours-"+cur.text.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+".jpg"}
+async function save(){
+ if(!curBlob)return;
+ if(downloads){try{await downloads.save({filename:fileName(),data:curBlob});$("note").textContent="Saved."}catch(err){$("note").textContent=err&&err.code==="declined"?"Not saved.":"Saving isn't available here right now."}return}
+ const a=document.createElement("a");a.href=URL.createObjectURL(curBlob);a.download=fileName();document.body.appendChild(a);a.click();a.remove();
+ $("note").textContent="Saved to your Downloads.";
+}
+async function share(){
+ if(!curBlob)return;
+ const file=new File([curBlob],fileName(),{type:"image/jpeg"});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file],title:"Little Detours",text:"Little Detours: "+cur.text});return}
+  catch(err){if(err&&err.name==="AbortError")return}
+ }
+ $("note").textContent="Sharing isn't available here, so the print was saved instead. Share it from your gallery.";
+ save();
+}
+
+// ---------- games (family photowalks) ----------
+const COLOURS=[["Red","#d8321f"],["Orange","#f08a24"],["Yellow","#f2c624"],["Green","#3f9a45"],["Blue","#2f6fd6"],["Purple","#7b4bc4"],["Pink","#ec6fa8"],["Brown","#8a5a35"],["White","#ffffff"],["Black","#151515"],["Grey","#8d8d8d"],["Turquoise","#22b3b0"],["Gold","#c9a227"]];
+const SHAPES=[["Circle",'<circle cx="24" cy="24" r="17"/>'],["Square",'<rect x="8" y="8" width="32" height="32"/>'],["Triangle",'<path d="M24 6 43 40H5z"/>'],["Star",'<path d="M24 5l5.6 12.2 13.3 1.4-10 9 2.8 13.1L24 34l-11.7 6.7 2.8-13.1-10-9 13.3-1.4z"/>'],["Heart",'<path d="M24 41S6 30 6 17a9 9 0 0 1 18-3 9 9 0 0 1 18 3c0 13-18 24-18 24z"/>'],["Spiral",'<path d="M24 24a3 3 0 0 1 6 0 6 6 0 0 1-12 0 9 9 0 0 1 18 0 12 12 0 0 1-24 0 15 15 0 0 1 30 0"/>'],["Arch",'<path d="M8 42V24a16 16 0 0 1 32 0v18"/>'],["Cross",'<path d="M24 6v36M6 24h36"/>'],["Hexagon",'<path d="M24 5l16.5 9.5v19L24 43 7.5 33.5v-19z"/>'],["Zigzag",'<path d="M4 32l8-16 8 16 8-16 8 16 8-16"/>'],["Stripes",'<path d="M8 14h32M8 24h32M8 34h32"/>'],["Arrow",'<path d="M6 24h34M28 12l12 12-12 12"/>']];
+const THEMES=["Faces hiding in things","Something tiny","Reflections","Shadows","Something old","Numbers","Letters and signs","Something funny","Animals or their traces","Doors and windows","Patterns","Something that moves","Looking up","Down at your feet","Something soft","Something rough","Lost and found","Nature in the city","Something that makes a sound","Things in pairs",
+ "Something that doesn't belong","Tiny worlds","Hearts hiding in things","Upside down","The oldest thing you can find","The newest thing you can find","Something that smells good","Rainbow bits","Something someone lost","Something taller than everyone","Something smaller than your thumb","Faces in clouds","A secret entrance","Something sparkly","A tiny garden","Something that's broken","Signs of animals","Something the wind is moving","A funny shadow","Your favourite thing today"];
+const LETTERS="ABCDEFGHIJKLMNOPRSTW".split("");
+const OPPOSITES=[["Big","Small"],["Old","New"],["Hard","Soft"],["Light","Dark"],["Rough","Smooth"],["Wet","Dry"],["Natural","Made by people"],["Busy","Calm"],["Straight","Curved"],["High","Low"],["Open","Closed"],["Full","Empty"],["Near","Far"],["Fast","Slow"],["Hot","Cold"],["One","Many"],["Inside","Outside"],["Broken","Whole"],["Colourful","Plain"],["Tall","Short"],["Heavy","Feather-light"],["Loud","Quiet"]];
+const BINGO=["A bench","A bird","A dog","A flower","A street sign","The number 7","A face in something","Something round","A bicycle","A puddle","A big tree","A red door","Street art","Something yellow","A cloud","A long shadow","Stairs","A window with plants","A cat","A clock","The letter A","A heart shape","A ball","A leaf","Something striped","A rock","A hat","A wheel","Something shiny","A light","An arrow","A crack","Something tiny","Something blue","A bin","A flag","A gate","A pattern","Water","A car you'd like"];
+const SURPRISE=["Something red","A shadow","Something tiny","Look up!","Your feet","A reflection","Something round","A face in an object","A texture, close up","Something that moves","A number","Something old","A leaf","The sky","A door","Something funny","Lines","Something soft","Something green","Light and shadow","A pattern","Someone from the walk","Something you never noticed","Something wet","Something tall","A sign","An animal","Something yellow","What's behind you","Something sparkly"];
+const sw=hex=>`<span class="sw" style="background:${hex}"></span>`;
+const shapeSvg=s=>`<svg class="ico" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${s[1]}</svg>`;
+const colourItems=()=>COLOURS.map(c=>({text:"Something "+c[0].toLowerCase(),short:c[0],vis:sw(c[1])}));
+const shapeItems=()=>SHAPES.map(s=>({text:s[0]==="Stripes"?"Stripes":"A "+s[0].toLowerCase(),short:s[0],vis:shapeSvg(s)}));
+const themeItems=()=>THEMES.map(t=>({text:t,short:t,vis:""}));
+const MODES={
+ colour:{name:"Colour hunt",desc:"Everyone gets a colour",kind:"hunt",pool:colourItems},
+ shape:{name:"Shape hunt",desc:"Everyone gets a shape",kind:"hunt",pool:shapeItems},
+ theme:{name:"Theme walk",desc:"Everyone gets a theme",kind:"hunt",pool:themeItems},
+ letter:{name:"Letter hunt",desc:"Things starting with a letter",kind:"hunt",pool:()=>LETTERS.map(l=>({text:"Things starting with "+l,short:l,vis:`<span class="sw" style="background:#141414;color:#fbfaf7;display:grid;place-items:center;font:800 26px Archivo,sans-serif">${l}</span>`}))},
+ combo:{name:"Colour + shape",desc:"Harder: both at once",kind:"hunt",pool:()=>{const r=[],cs=shuffled(COLOURS,Math.random),ss=shuffled(SHAPES,Math.random);for(let i=0;i<Math.min(cs.length,ss.length);i++){const c=cs[i],s=ss[i];r.push({text:"Something "+c[0].toLowerCase(),tw:[s[0].toLowerCase()+" shape"],short:c[0]+" "+s[0].toLowerCase(),vis:sw(c[1])+shapeSvg(s)})}return r}},
+ same:{name:"Same dare",desc:"Everyone shoots the same thing",kind:"same"},
+ bingo:{name:"Photo bingo",desc:"Fill a 3×3 card, first line wins",kind:"bingo"},
+ opp:{name:"Opposites",desc:"Find both sides of a pair",kind:"opp"},
+ surprise:{name:"Surprise prompts",desc:"A new mini-dare every few minutes",kind:"surprise"}
+};
+const TIMES=[[0,"No limit"],[15,"15 min"],[30,"30 min"],[45,"45 min"],[60,"1 hour"],[90,"1½ hours"]];
+const COUNTS=[1,2,3,4,5,6,9];
+const EVERYS=[5,10,15];
+let names=ls.get("pd-names",[]),gmode=ls.get("pd-gmode","colour"),gtime=ls.get("pd-gtime",30),gcount=ls.get("pd-gcount",1),gevery=ls.get("pd-gevery",10);
+let game=ls.get("pd-game",null),openIdx=-1,tick=null,pendingSlot=null,armed=null;
+if(!MODES[gmode])gmode="colour";if(game&&!game.v)game=null;
+const kindOf=m=>MODES[m].kind;
+const saveGame=()=>ls.set("pd-game",game);
+
+function renderSetup(){
+ const k=kindOf(gmode);
+ $("names").innerHTML=names.length?names.map((n,i)=>`<span class="name">${esc(n)}<button data-rm="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join(""):`<span class="sub">Add everyone who's coming, kids included.</span>`;
+ $("modes").innerHTML=Object.entries(MODES).map(([key,m])=>`<button class="mode" data-m="${key}" aria-pressed="${key===gmode}"><b>${m.name}</b><span>${m.desc}</span></button>`).join("");
+ $("countrow").hidden=!(k==="hunt"||k==="same");
+ $("counts").innerHTML=COUNTS.map(v=>`<button data-c="${v}" aria-pressed="${v===gcount}">${v}</button>`).join("");
+ $("counthint").textContent=gcount>1?`Each person shoots ${gcount} photos of their assignment, and they become one collage print.`:"";
+ $("everyrow").hidden=k!=="surprise";
+ $("everys").innerHTML=EVERYS.map(v=>`<button data-e="${v}" aria-pressed="${v===gevery}">${v} min</button>`).join("");
+ $("times").innerHTML=TIMES.map(([v,l])=>`<button data-t="${v}" aria-pressed="${v===gtime}">${l}</button>`).join("");
+ $("secretrow").hidden=!(k==="hunt"||k==="opp");
+ $("secret").checked=ls.get("pd-secret",false);
+ $("modehint").textContent={bingo:"Everyone gets their own 3×3 card. Each square is one photo, and the finished card becomes a collage print.",opp:"Each person gets a pair and shoots one photo for each side. The two photos become one print.",surprise:"Keep the app open: the phone buzzes with a new mini-dare for everyone. All your answers become one collage print.",same:"Everyone gets the same dare, so you can compare how each of you saw it."}[k]||"";
+}
+function deal(again){
+ if(!names.length){$("gnote").textContent="Add at least one name first.";$("newname").focus();return}
+ const m=MODES[gmode],k=m.kind,prev=game;
+ if(prev)dropSlots("slot:"+prev.id+":");
+ const keep=again&&prev;
+ game={v:2,id:Date.now(),mode:gmode,kind:k,secret:(k==="hunt"||k==="opp")&&$("secret").checked,count:(k==="hunt"||k==="same")?gcount:1,
+  every:gevery,start:keep?prev.start:Date.now(),end:keep?prev.end:(gtime?Date.now()+gtime*60000:null),buzzed:keep?prev.buzzed:false,seen:{},bingo:{},full:{},round:0};
+ if(k==="hunt"){const pool=shuffled(m.pool(),Math.random);game.players=names.map((n,i)=>({name:n,item:pool[i%pool.length]}))}
+ else if(k==="same"){const pool=shuffled([...themeItems(),...colourItems(),...shapeItems()],Math.random);game.players=names.map(n=>({name:n,item:pool[0]}));game.same=pool[0]}
+ else if(k==="bingo"){game.players=names.map(n=>({name:n,item:{text:"Photo bingo",short:"bingo"},slots:shuffled(BINGO,Math.random).slice(0,9)}))}
+ else if(k==="opp"){const pool=shuffled(OPPOSITES,Math.random);game.players=names.map((n,i)=>{const p=pool[i%pool.length];return {name:n,item:{text:p[0]+" & "+p[1].toLowerCase(),short:p[0]+" / "+p[1]},slots:[p[0],p[1]]}})}
+ else if(k==="surprise"){game.prompts=shuffled(SURPRISE,Math.random);game.players=names.map(n=>({name:n,item:{text:"Surprise prompts",short:"surprise"}}))}
+ if(game.count>1)game.players.forEach(p=>p.slots=Array.from({length:game.count},(_,j)=>"Photo "+(j+1)));
+ saveGame();openIdx=-1;renderGame();
+}
+function totalRounds(){return game.end?Math.min(game.prompts.length,Math.ceil((game.end-game.start)/(game.every*60000))):game.prompts.length}
+function roundsNow(){
+ if(!game||game.kind!=="surprise")return 0;
+ const t=Math.min(Date.now(),game.end||Infinity),n=1+Math.floor((t-game.start)/(game.every*60000));
+ return Math.max(1,Math.min(totalRounds(),n));
+}
+function slotLabels(i){return game.kind==="surprise"?game.prompts.slice(0,roundsNow()):(game.players[i].slots||null)}
+const slotKey=(i,j)=>"slot:"+game.id+":"+i+":"+j;
+const printKey=i=>"game:"+game.id+":"+i;
+function filled(i){const L=slotLabels(i)||[];return L.map((_,j)=>memSlots.has(slotKey(i,j)))}
+function gameDare(i){
+ const p=game.players[i],m=MODES[game.mode],f=filled(i),n=f.filter(Boolean).length;
+ let text=p.item.text,tw=[...(p.item.tw||[])];
+ if(game.kind==="bingo")tw=[game.bingo[i]?(game.full[i]?"Full house!":"BINGO!"):n+" of 9 squares"];
+ else if(game.kind==="surprise")tw=[n+" mini-dare"+(n===1?"":"s")];
+ else if(game.count>1)tw.push(n+" photos");
+ return {key:printKey(i),kind:"Game",cat:m.name,text,tw,tag:"Photowalk · "+m.name+" · "+p.name,collage:!!slotLabels(i)};
+}
+function slotsHTML(i){
+ const L=slotLabels(i);if(!L)return "";
+ const labelled=game.kind!=="hunt"&&game.kind!=="same";
+ return `<div class="slots${L.length===2||L.length===4?" c2":""}">${L.map((lab,j)=>{const s=memSlots.get(slotKey(i,j));
+  return `<button class="slot${s?" full":""}" data-slot="${i}:${j}" aria-label="${esc(lab)}${s?" (done, tap to replace)":""}">${s?`<img src="${s.thumb}" alt="">`:"+"}${labelled?`<span>${esc(lab)}</span>`:""}</button>`}).join("")}</div>`;
+}
+function renderGame(){
+ const on=!!game;$("gsetup").hidden=on;$("gplay").hidden=!on;
+ if(!on){renderSetup();clearInterval(tick);tick=null;return}
+ const m=MODES[game.mode],k=game.kind;
+ $("gtitle").textContent=m.name;
+ $("gsub").textContent=game.players.length+(game.players.length>1?" players":" player")+(game.secret?" · secret":"")+(game.count>1?" · "+game.count+" photos each":"");
+ const bd=$("bigdare");
+ if(k==="same"){bd.hidden=false;bd.innerHTML=`<div class="lvl">Everyone’s dare</div><div class="what" style="display:flex;align-items:center;gap:12px">${game.same.vis||""}<p class="dare">${esc(game.same.text)}</p></div>`}
+ else if(k==="surprise"){const r=roundsNow();bd.hidden=false;bd.innerHTML=`<div class="lvl">Surprise ${r}${game.end?" of "+totalRounds():""} · everyone</div><p class="dare">${esc(game.prompts[r-1])}</p><p class="prog" id="nextr"></p>`}
+ else bd.hidden=true;
+ $("players").innerHTML=game.players.map((p,i)=>{
+  const pr=memPrints.get(printKey(i)),L=slotLabels(i),hidden=game.secret&&openIdx!==i;
+  const f=L?filled(i):[],n=f.filter(Boolean).length;
+  const what=k==="same"||k==="surprise"||k==="bingo"?"":k==="opp"?`<div class="what"><p class="dare">${esc(p.slots[0])} ↔ ${esc(p.slots[1].toLowerCase())}</p></div>`:`<div class="what">${p.item.vis||""}<p class="dare">${esc(p.item.text)}</p></div>${p.item.tw?`<ul class="tw">${p.item.tw.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}`;
+  const main=L?`<button class="main" data-print="${i}"${n?"":" disabled"}>${pr?"Update print":"Make print"} (${n}/${L.length})</button>`:`<button class="main" data-shoot="${i}">${pr?"✓ View print":"Shoot it"}</button>`;
+  return `<div class="pc">${game.bingo[i]?`<span class="stamp">${game.full[i]?"FULL HOUSE":"BINGO"}</span>`:""}
+   <div class="who">${esc(p.name)}</div>${what}${slotsHTML(i)}
+   <div class="acts">${game.secret?`<button data-hide="${i}">Hide</button>`:""}${pr&&L?`<button data-view="${i}">View</button>`:""}${main}</div>
+   ${hidden?`<button class="cover" data-reveal="${i}"><b>${esc(p.name)}</b>${game.seen[i]?"✓ Seen · tap to look again":"Only you: tap to see yours"}</button>`:""}
+  </div>`}).join("");
+ $("pnote").textContent="Prints made here also land in Your prints on the Dares tab.";
+ updTimer();if((game.end||k==="surprise")&&!tick)tick=setInterval(updTimer,1000);
+}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4500);try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch(e){}}
+function updTimer(){
+ if(!game)return;
+ if(game.kind==="surprise"){
+  const r=roundsNow();
+  if(r>game.round){const first=game.round===0;game.round=r;saveGame();renderGame();if(!first)toast("New surprise: "+game.prompts[r-1]);return}
+  const nx=$("nextr"),next=game.start+r*game.every*60000;
+  if(nx)nx.textContent=r>=totalRounds()||(game.end&&next>=game.end)?"That was the last one.":"Next surprise in "+fmt(next-Date.now());
+ }
+ if(!game.end){$("timer").hidden=true;return}
+ $("timer").hidden=false;const left=game.end-Date.now();
+ if(left<=0){$("timer").classList.add("over");$("tlabel").textContent="Time’s up! Regroup and compare";$("tleft").textContent="0:00";
+  if(!game.buzzed){game.buzzed=true;saveGame();toast("Time’s up! Regroup and compare")}
+  if(game.kind!=="surprise"){clearInterval(tick);tick=null}return}
+ $("timer").classList.remove("over");$("tlabel").textContent="Time left";$("tleft").textContent=fmt(left);
+}
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;return (h?h+":"+pad2(mm):mm)+":"+pad2(ss)}
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function checkBingo(i){
+ if(game.kind!=="bingo")return;const f=filled(i),p=game.players[i];
+ if(!game.bingo[i]&&LINES.some(l=>l.every(j=>f[j]))){game.bingo[i]=Date.now();saveGame();toast("BINGO! "+p.name+" got a line")}
+ if(!game.full[i]&&f.every(Boolean)){game.full[i]=Date.now();saveGame();toast("Full house for "+p.name+"!")}
+}
+async function shrink(img,max){const k=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,"image/jpeg",.88))}
+function squareThumb(img,size=240){const t=document.createElement("canvas"),s=Math.min(img.naturalWidth,img.naturalHeight);t.width=t.height=size;t.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,size,size);return t.toDataURL("image/jpeg",.75)}
+$("slotin").addEventListener("change",async e=>{
+ const f=e.target.files[0];e.target.value="";if(!f||!pendingSlot||!game)return;
+ const {i,j,id}=pendingSlot;pendingSlot=null;if(id!==game.id)return;
+ try{const img=await loadImg(f);await putSlot({key:slotKey(i,j),photo:await shrink(img,1600),thumb:squareThumb(img)});checkBingo(i);renderGame()}
+ catch(err){$("pnote").textContent="Couldn't read that image. Try another one."}
+});
+async function makeCollage(i){
+ const L=slotLabels(i),k=game.kind,labelled=k!=="hunt"&&k!=="same";
+ // bingo and opposites keep their layout (empty squares stay); the rest use only the photos taken
+ const items=L.map((lab,j)=>({lab,s:memSlots.get(slotKey(i,j))})).filter(x=>k==="bingo"||k==="opp"||x.s);
+ if(!items.some(x=>x.s)){$("pnote").textContent="Add at least one photo first.";return}
+ $("pnote").textContent="Making the collage…";
+ try{await Promise.all([document.fonts.load("600 40px Caveat"),document.fonts.load("600 20px Inter")])}catch(e){}
+ const n=items.length,cols=n<=2?n:n<=4?2:n<=9?3:4,rows=Math.ceil(n/cols),C=600,G=14,LB=labelled?84:0;
+ const c=document.createElement("canvas"),x=c.getContext("2d");c.width=cols*C+(cols-1)*G;c.height=rows*(C+LB)+(rows-1)*G;
+ x.fillStyle="#fbfaf7";x.fillRect(0,0,c.width,c.height);
+ for(let q=0;q<n;q++){
+  const it=items[q],cx=(q%cols)*(C+G),cy=Math.floor(q/cols)*(C+LB+G);
+  if(it.s){const im=await loadImg(it.s.photo),s=Math.min(im.naturalWidth,im.naturalHeight);x.drawImage(im,(im.naturalWidth-s)/2,(im.naturalHeight-s)/2,s,s,cx,cy,C,C)}
+  else{x.fillStyle="#ebe7df";x.fillRect(cx,cy,C,C);x.strokeStyle="#c9c3b8";x.lineWidth=4;x.setLineDash([16,12]);x.strokeRect(cx+2,cy+2,C-4,C-4);x.setLineDash([])}
+  if(labelled){x.fillStyle="#141414";x.font="600 54px Caveat, cursive";x.textAlign="center";
+   let t=it.lab;while(x.measureText(t).width>C-20&&t.length>4)t=t.slice(0,-2)+"…";x.fillText(t,cx+C/2,cy+C+58);x.textAlign="left"}
+ }
+ const grid=await new Promise(r=>c.toBlob(r,"image/jpeg",.9)),gi=await loadImg(grid),d=gameDare(i);
+ const pc=await compose(gi,d,2.4),blob=await new Promise(r=>pc.toBlob(r,"image/jpeg",.9));
+ await putPrint({key:d.key,date:Date.now(),text:d.text,dare:d,blob,photo:grid,thumb:squareThumb(gi)});
+ $("pnote").textContent="";openView(d);
+}
+async function sendGame(){
+ const m=MODES[game.mode],k=game.kind;
+ let body;
+ if(k==="same")body="Everyone: "+game.same.short+(game.count>1?" ("+game.count+" photos each)":"");
+ else if(k==="bingo")body=game.players.map(p=>p.name+": "+p.slots.join(", ")).join("\n");
+ else if(k==="surprise")body="A new mini-dare every "+game.every+" min for: "+game.players.map(p=>p.name).join(", ");
+ else body=game.players.map(p=>p.name+": "+p.item.short).join("\n")+(game.count>1?"\n("+game.count+" photos each)":"");
+ const txt="📷 Little Detours photowalk: "+m.name+(game.end?" (finish "+new Date(game.end).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+")":"")+"\n"+body;
+ if(navigator.share){try{await navigator.share({text:txt});return}catch(e){if(e&&e.name==="AbortError")return}}
+ try{await navigator.clipboard.writeText(txt);$("pnote").textContent="Copied. Paste it into your family chat."}catch(e){$("pnote").textContent=txt}
+}
+// buttons that throw away photos ask for a second tap
+function twoTap(btn,label,fn){if(armed===btn){armed=null;btn.textContent=label;fn();return}
+ if(armed){armed.textContent=armed.dataset.l}armed=btn;btn.dataset.l=label;btn.textContent="Tap again to confirm";setTimeout(()=>{if(armed===btn){armed=null;btn.textContent=label}},3500)}
+function setTab(t){
+ $("tab-dares").hidden=t!=="dares";$("tab-games").hidden=t!=="games";
+ $("t-dares").setAttribute("aria-selected",t==="dares");$("t-games").setAttribute("aria-selected",t==="games");
+ ls.set("pd-tab",t);if(t==="games")renderGame();
+}
+$("t-dares").addEventListener("click",()=>setTab("dares"));
+$("t-games").addEventListener("click",()=>setTab("games"));
+$("addform").addEventListener("submit",e=>{e.preventDefault();
+ const v=$("newname").value.trim();if(!v)return;
+ if(names.some(n=>n.toLowerCase()===v.toLowerCase())){$("gnote").textContent=v+" is already on the list.";return}
+ if(names.length>=20){$("gnote").textContent="That's the maximum of 20 people.";return}
+ names.push(v);ls.set("pd-names",names);$("newname").value="";$("gnote").textContent="";renderSetup();$("newname").focus();
+});
+$("names").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;names.splice(+b.dataset.rm,1);ls.set("pd-names",names);renderSetup()});
+$("modes").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;gmode=b.dataset.m;ls.set("pd-gmode",gmode);renderSetup()});
+$("times").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;gtime=+b.dataset.t;ls.set("pd-gtime",gtime);renderSetup()});
+$("counts").addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(!b)return;gcount=+b.dataset.c;ls.set("pd-gcount",gcount);renderSetup()});
+$("everys").addEventListener("click",e=>{const b=e.target.closest("[data-e]");if(!b)return;gevery=+b.dataset.e;ls.set("pd-gevery",gevery);renderSetup()});
+$("secret").addEventListener("change",e=>ls.set("pd-secret",e.target.checked));
+$("deal").addEventListener("click",()=>deal(false));
+$("redeal").addEventListener("click",e=>twoTap(e.currentTarget,"Deal again",()=>deal(true)));
+$("gend").addEventListener("click",e=>twoTap(e.currentTarget,"New game",()=>{dropSlots("slot:"+game.id+":");game=null;saveGame();renderGame()}));
+$("gsend").addEventListener("click",sendGame);
+$("players").addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;const ds=b.dataset;
+ if(ds.reveal!=null){openIdx=+ds.reveal;game.seen[openIdx]=true;saveGame();renderGame()}
+ else if(ds.hide!=null){openIdx=-1;renderGame()}
+ else if(ds.shoot!=null){openView(gameDare(+ds.shoot))}
+ else if(ds.slot!=null){const [i,j]=ds.slot.split(":").map(Number);pendingSlot={i,j,id:game.id};$("slotin").click()}
+ else if(ds.print!=null){makeCollage(+ds.print)}
+ else if(ds.view!=null){const p=memPrints.get(printKey(+ds.view));if(p)openView(p.dare)}
+});
+
+// ---------- events ----------
+document.addEventListener("click",e=>{
+ const c=e.target.closest(".card,.gal button");if(!c)return;
+ const d=find(c.dataset.k);if(d)openView(d);
+});
+$("back").addEventListener("click",()=>{if(location.hash==="#dare")history.back();else closeView()});
+addEventListener("hashchange",()=>{if(location.hash!=="#dare"&&$("view").classList.contains("open"))closeView()});
+$("cam").addEventListener("change",onFile);$("up").addEventListener("change",onFile);
+$("save").addEventListener("click",save);$("share").addEventListener("click",share);
+$("change").addEventListener("click",()=>{clearPhoto();setMode(false);$("note").textContent=""});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ymd(new Date())!==ymd(now)&&!cur)renderHome()});
+if(location.hash==="#dare")history.replaceState(null,"",location.pathname+location.search);
+
+renderHome();
+Promise.all([allPrints(),loadSlots()]).then(()=>setTab(ls.get("pd-tab","dares")));
+if(window.claude&&claude.use){claude.use("downloads").then(d=>{downloads=d}).catch(()=>{})}
+if("serviceWorker" in navigator&&!window.claude){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+}
+</script>
+</body>
+</html>
